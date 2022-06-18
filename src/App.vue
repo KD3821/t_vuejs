@@ -1,30 +1,79 @@
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+  <div class="app">
+    <h1>Страница с постами</h1>
+    <my-button
+        @click="fetchPosts"
+    >
+      Получить посты
+    </my-button>
+    <my-button
+        @click="showDialog"
+        style="margin: 15px 0;"
+    >
+      Создать пост
+    </my-button>
+    <my-dialog v-model:show="dialogVisible">
+      <post-form
+          @create="createPost"
+      />
+    </my-dialog>
+    <post-list
+        :posts="posts"
+        @remove="removePost"
+    />
+  </div>
 </template>
 
+<script>
+import PostList from "./components/PostList";
+import PostForm from "@/components/PostForm";
+import MyDialog from "@/components/UI/MyDialog";
+import axios from 'axios';
+import MyButton from "@/components/UI/MyButton";
+
+export default {
+  components: {
+    MyButton,
+    MyDialog,
+    PostList, PostForm
+  },
+  data() {
+    return {
+      posts: [],
+      dialogVisible: false
+    }
+  },
+  methods: {
+    createPost(post) {
+      this.posts.push(post);
+      this.dialogVisible = false;
+    },
+    removePost(post) {
+      this.posts = this.posts.filter(p => p.id !== post.id)
+    },
+    showDialog() {
+      this.dialogVisible = true;
+    },
+    async fetchPosts() {
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10');
+        this.posts = response.data;
+        console.log(response);
+      } catch (e) {
+        alert('Ошибка!')
+      }
+    }
+  }
+}
+</script>
+
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
+.app {
+  padding: 20px;
 }
 </style>
