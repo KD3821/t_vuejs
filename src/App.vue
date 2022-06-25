@@ -1,17 +1,18 @@
 <template>
   <div class="app">
     <h1>Страница с постами</h1>
-    <my-button
-        @click="fetchPosts"
-    >
-      Получить посты
-    </my-button>
-    <my-button
-        @click="showDialog"
-        style="margin: 15px 0;"
-    >
-      Создать пост
-    </my-button>
+    <div class="app__btns">
+      <my-button
+          @click="showDialog"
+      >
+        Создать пост
+      </my-button>
+      <my-select
+        v-model="selectedSort"
+        :options="sortOptions"
+      >
+      </my-select>
+    </div>
     <my-dialog v-model:show="dialogVisible">
       <post-form
           @create="createPost"
@@ -20,7 +21,9 @@
     <post-list
         :posts="posts"
         @remove="removePost"
+        v-if="!isPostLoading"
     />
+    <div v-else>Идет загрузка...</div>
   </div>
 </template>
 
@@ -30,9 +33,11 @@ import PostForm from "@/components/PostForm";
 import MyDialog from "@/components/UI/MyDialog";
 import axios from 'axios';
 import MyButton from "@/components/UI/MyButton";
+import MySelect from "@/components/UI/MySelect";
 
 export default {
   components: {
+    MySelect,
     MyButton,
     MyDialog,
     PostList, PostForm
@@ -40,7 +45,13 @@ export default {
   data() {
     return {
       posts: [],
-      dialogVisible: false
+      dialogVisible: false,
+      isPostLoading: false,
+      selectedSort: '',
+      sortOptions: [
+        {value: 'title', name: 'По названию'},
+        {value: 'body', name: 'По содержанию'},
+      ]
     }
   },
   methods: {
@@ -56,12 +67,24 @@ export default {
     },
     async fetchPosts() {
       try {
+        this.isPostLoading = true;
         const response = await axios.get('https://jsonplaceholder.typicode.com/posts?_limit=10');
         this.posts = response.data;
-        console.log(response);
       } catch (e) {
         alert('Ошибка!')
+      } finally {
+        this.isPostLoading = false;
       }
+    }
+  },
+  mounted() {
+    this.fetchPosts();
+  },
+  watch: {
+    selectedSort(newValue) {
+      this.posts.sort( (post1, post2)=> {
+        return post1[this.selectedSort];
+      })
     }
   }
 }
@@ -75,5 +98,10 @@ export default {
 }
 .app {
   padding: 20px;
+}
+.app__btns {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
 }
 </style>
